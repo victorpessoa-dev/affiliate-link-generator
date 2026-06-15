@@ -1,0 +1,13 @@
+.snowflake/
+.v0-trash/
+.vercel/
+
+# Environment variables
+.env*.local
+
+# Common ignores
+node_modules
+.next/
+.data/
+*.tsbuildinfo
+.DS_Store
