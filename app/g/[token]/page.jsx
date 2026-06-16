@@ -7,11 +7,13 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 export const runtime = "nodejs"
 
-export async function generateMetadata({ searchParams }) {
-  const { t, token } = await searchParams
-  const rawToken = typeof t === "string" ? t : token
-  const payload =
-    typeof rawToken === "string" ? readRedirectToken(rawToken) : null
+async function getPayload(params) {
+  const { token } = await params
+  return typeof token === "string" ? readRedirectToken(token) : null
+}
+
+export async function generateMetadata({ params }) {
+  const payload = await getPayload(params)
 
   if (!payload) {
     return createOfferMetadata({
@@ -23,11 +25,8 @@ export async function generateMetadata({ searchParams }) {
   return createOfferMetadata(payload)
 }
 
-export default async function RedirectPage({ searchParams }) {
-  const { t, token } = await searchParams
-  const rawToken = typeof t === "string" ? t : token
-  const payload =
-    typeof rawToken === "string" ? readRedirectToken(rawToken) : null
+export default async function ShortRedirectPage({ params }) {
+  const payload = await getPayload(params)
 
   if (!payload) {
     return (

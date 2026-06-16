@@ -1,6 +1,7 @@
 import "server-only"
 
 import { createHmac, timingSafeEqual } from "node:crypto"
+import { deflateRawSync, inflateRawSync } from "node:zlib"
 
 type RedirectPayload = {
   url: string
@@ -28,6 +29,14 @@ function sign(value: string) {
   return createHmac("sha256", getSecret()).update(value).digest("base64url")
 }
 
+function signShort(value: string) {
+  return createHmac("sha256", getSecret())
+    .update(value)
+    .digest()
+    .subarray(0, 10)
+    .toString("base64url")
+}
+
 function isValidDestination(rawUrl: string) {
   try {
     const url = new URL(rawUrl)
@@ -40,17 +49,62 @@ function isValidDestination(rawUrl: string) {
 export function createRedirectToken(
   data: Omit<RedirectPayload, "expiresAt">,
 ): string {
-  const payload: RedirectPayload = {
-    ...data,
-    expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 30,
+  if (!isValidDestination(data.url)) {
+    throw new Error("Não foi possível encurtar o destino.")
   }
-  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url")
 
-  return `${encoded}.${sign(encoded)}`
+  const payload = {
+    u: data.url,
+    e: Math.floor((Date.now() + 1000 * 60 * 60 * 24 * 30) / 1000),
+  }
+  const encoded = deflateRawSync(JSON.stringify(payload)).toString("base64url")
+  const value = `2.${encoded}`
+
+  return `${value}.${signShort(value)}`
 }
 
 export function readRedirectToken(token: string): RedirectPayload | null {
-  const [encoded, signature] = token.split(".")
+  const parts = token.split(".")
+  if (parts[0] === "2") {
+    const [, encoded, signature] = parts
+    if (!encoded || !signature) return null
+
+    const value = `2.${encoded}`
+    const expected = Buffer.from(signShort(value))
+    const received = Buffer.from(signature)
+
+    if (
+      expected.length !== received.length ||
+      !timingSafeEqual(expected, received)
+    ) {
+      return null
+    }
+
+    try {
+      const payload = JSON.parse(
+        inflateRawSync(Buffer.from(encoded, "base64url")).toString("utf8"),
+      ) as Record<string, unknown>
+
+      if (
+        typeof payload.u !== "string" ||
+        typeof payload.e !== "number" ||
+        payload.e * 1000 < Date.now()
+      ) {
+        return null
+      }
+
+      if (!isValidDestination(payload.u)) return null
+
+      return {
+        url: payload.u,
+        expiresAt: payload.e * 1000,
+      }
+    } catch {
+      return null
+    }
+  }
+
+  const [encoded, signature] = parts
   if (!encoded || !signature) return null
 
   const expected = Buffer.from(sign(encoded))

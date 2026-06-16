@@ -118,7 +118,7 @@ npm run build
 4. A API configurada é utilizada, quando disponível.
 5. Se a API não estiver disponível, os parâmetros do ID de afiliado são
    adicionados diretamente à URL.
-6. O sistema cria um link assinado em `/go?token=...`, sem salvar o destino no
+6. O sistema cria um link assinado em `/g/...`, sem salvar o destino no
    servidor.
 7. O link assinado exibe uma tela de transição e redireciona o visitante para a
    URL de afiliado.
@@ -128,7 +128,7 @@ npm run build
 O link principal exibido e copiado pelo gerador usa o formato:
 
 ```text
-https://seu-dominio.com/go?token=codigo-assinado
+https://seu-dominio.com/g/codigo-assinado
 ```
 
 O destino fica dentro do token assinado e expira depois de 30 dias. O app não

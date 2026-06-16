@@ -80,14 +80,9 @@ export async function POST(request: Request) {
     const result = await convertAffiliateLink(body.url)
     const token = createRedirectToken({
       url: result.affiliateUrl,
-      title: result.product?.title,
-      description: result.product?.description,
-      image: result.product?.image,
-      platformLabel: result.platformLabel,
     })
     const baseUrl = getBaseUrl(request)
-    const redirectUrl = new URL("/go", baseUrl)
-    redirectUrl.searchParams.set("token", token)
+    const redirectUrl = new URL(`/g/${token}`, baseUrl)
     const redirectUrlString = redirectUrl.toString()
 
     return json({
