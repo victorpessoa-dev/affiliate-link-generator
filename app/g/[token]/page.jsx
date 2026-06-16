@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { readRedirectToken } from "@/lib/redirect-token"
 import { RedirectScreen } from "@/components/redirect-screen"
 import { createOfferMetadata } from "@/lib/site-metadata"
 
@@ -9,13 +8,23 @@ export const runtime = "nodejs"
 
 async function getPayload(params) {
   const { token } = params
+  if (typeof token !== "string") return null
+
   try {
-    return typeof token === "string" ? readRedirectToken(token) : null
+    // The app now uses the affiliate URL directly. If an older /g/:token
+    // contains an encoded URL, try to decode and validate it.
+    const decoded = decodeURIComponent(token)
+    try {
+      const url = new URL(decoded)
+      if (url.protocol === "http:" || url.protocol === "https:") {
+        return { url: url.toString(), expiresAt: Date.now() + 1000 * 60 }
+      }
+    } catch {
+      return null
+    }
   } catch (err) {
-    // Log unexpected errors when reading the token server-side
-    // so we can inspect token content in server logs.
     // eslint-disable-next-line no-console
-    console.error("readRedirectToken error", { token, error: err })
+    console.error("decode token error", { token, error: err })
     return null
   }
 }

@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { convertToAffiliateLink } from "@/lib/affiliate"
 import { useHistory } from "@/lib/use-history"
+import { truncate } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -176,7 +177,7 @@ export function AffiliateConverter() {
                 </div>
 
                 <p className="break-all rounded-md bg-background px-3 py-2 font-mono text-xs">
-                  {result.redirectUrl}
+                  {truncate(result.redirectUrl, 80)}
                 </p>
 
                 <div className="flex flex-col gap-2 sm:flex-row">

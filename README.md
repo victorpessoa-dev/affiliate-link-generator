@@ -29,7 +29,6 @@ Para gerar links adicionando os parâmetros de afiliado à URL, configure:
 ```env
 SHOPEE_AFFILIATE_ID=seu_id_da_shopee
 MELI_AFFILIATE_ID=seu_id_do_mercado_livre
-REDIRECT_SECRET=uma_chave_longa_e_aleatoria
 ```
 
 Substitua os valores de exemplo pelos identificadores fornecidos pelas
@@ -37,13 +36,6 @@ plataformas.
 
 Não é necessário usar o prefixo `NEXT_PUBLIC_`. Os IDs são processados no
 servidor e não precisam ser expostos ao navegador.
-
-`REDIRECT_SECRET` assina os links intermediários e impede que terceiros alterem
-o destino. Use uma sequência longa e privada. Para gerar uma com Node.js:
-
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
 
 Em produção, configure também o endereço público da aplicação:
 

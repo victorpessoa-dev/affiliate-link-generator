@@ -39,7 +39,7 @@ const AFFILIATE_CONFIG = {
     id:
       process.env.MELI_AFFILIATE_ID ||
       process.env.NEXT_PUBLIC_MELI_AFFILIATE_ID ||
-      "vicpe0011",
+      "",
     params: (id: string) => ({
       matt_word: id,
       matt_tool: "63517227",

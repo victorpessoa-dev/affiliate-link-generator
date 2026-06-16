@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { convertAffiliateLink } from "@/lib/affiliate-server"
-import { createRedirectToken } from "@/lib/redirect-token"
 import { consumeRateLimit } from "@/lib/rate-limit"
 
 export const runtime = "nodejs"
@@ -78,13 +77,9 @@ export async function POST(request: Request) {
     }
 
     const result = await convertAffiliateLink(body.url)
-    const token = createRedirectToken({
-      url: result.affiliateUrl,
-    })
-    const baseUrl = getBaseUrl(request)
-    // encode the token when building the path to ensure it is safe in the URL
-    const redirectUrl = new URL(`/g/${encodeURIComponent(token)}`, baseUrl)
-    const redirectUrlString = redirectUrl.toString()
+      // Use the converted affiliate URL directly as the redirect/short URL.
+      // No token-based redirect is required.
+      const redirectUrlString = result.affiliateUrl
 
     return json({
       ...result,

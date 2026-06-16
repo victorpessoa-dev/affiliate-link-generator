@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { readRedirectToken } from "@/lib/redirect-token"
 import { RedirectScreen } from "@/components/redirect-screen"
 import { createOfferMetadata } from "@/lib/site-metadata"
 
@@ -10,8 +9,18 @@ export const runtime = "nodejs"
 export async function generateMetadata({ searchParams }) {
   const { t, token } = await searchParams
   const rawToken = typeof t === "string" ? t : token
-  const payload =
-    typeof rawToken === "string" ? readRedirectToken(rawToken) : null
+  let payload = null
+  if (typeof rawToken === "string") {
+    try {
+      const decoded = decodeURIComponent(rawToken)
+      const url = new URL(decoded)
+      if (url.protocol === "http:" || url.protocol === "https:") {
+        payload = { url: url.toString(), expiresAt: Date.now() + 1000 * 60 }
+      }
+    } catch {
+      payload = null
+    }
+  }
 
   if (!payload) {
     return createOfferMetadata({
@@ -26,8 +35,20 @@ export async function generateMetadata({ searchParams }) {
 export default async function RedirectPage({ searchParams }) {
   const { t, token } = await searchParams
   const rawToken = typeof t === "string" ? t : token
-  const payload =
-    typeof rawToken === "string" ? readRedirectToken(rawToken) : null
+  let payload = null
+  if (typeof rawToken === "string") {
+    try {
+      const decoded = decodeURIComponent(rawToken)
+      const url = new URL(decoded)
+      if (url.protocol === "http:" || url.protocol === "https:") {
+        payload = { url: url.toString(), expiresAt: Date.now() + 1000 * 60 }
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("decode token error", { rawToken, error: err })
+      payload = null
+    }
+  }
 
   if (!payload) {
     return (
