@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
 import {
   AlertCircle,
   ArrowUpRight,
@@ -8,6 +9,7 @@ import {
   Copy,
   Link2,
   LoaderCircle,
+  RotateCcw,
   Wand2,
 } from "lucide-react"
 import { convertToAffiliateLink } from "@/lib/affiliate"
@@ -27,6 +29,7 @@ export function AffiliateConverter() {
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
   const [isConverting, setIsConverting] = useState(false)
+  const [statusOk, setStatusOk] = useState(true)
   const requestController = useRef(null)
   const copiedTimer = useRef(null)
   const history = useHistory()
@@ -36,6 +39,14 @@ export function AffiliateConverter() {
       requestController.current?.abort()
       if (copiedTimer.current) window.clearTimeout(copiedTimer.current)
     }
+  }, [])
+
+  // Check affiliate status on mount
+  useEffect(() => {
+    fetch("/api/status")
+      .then((res) => res.json())
+      .then((data) => setStatusOk(data.status === "ok"))
+      .catch(() => setStatusOk(false))
   }, [])
 
   async function handleConvert(event) {
@@ -83,8 +94,33 @@ export function AffiliateConverter() {
     }
   }
 
+  function clearInput() {
+    setInput("")
+    setError(null)
+    setResult(null)
+    setCopied(false)
+  }
+
   return (
     <div className="flex flex-col gap-8">
+      {/* Status Warning */}
+      {!statusOk && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 flex items-start gap-3">
+          <AlertCircle className="size-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-medium text-red-900">IDs de Afiliado Não Configurados</p>
+            <p className="text-sm text-red-700 mt-1">
+              Configure SHOPEE_AFFILIATE_ID e MELI_AFFILIATE_ID no .env.local para garantir sua comissão.
+            </p>
+            <Link
+              href="/debug"
+              className="text-sm font-medium text-red-700 hover:underline mt-2 inline-block"
+            >
+              Verificar status →
+            </Link>
+          </div>
+        </div>
+      )}
       <Card className="converter-card overflow-visible p-5 sm:p-6">
         <form onSubmit={handleConvert} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
@@ -97,13 +133,24 @@ export function AffiliateConverter() {
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   placeholder="Cole aqui o link da Shopee ou do Mercado Livre"
-                  className="h-11 border-primary/15 bg-background/80 pl-9 shadow-sm transition-all focus-visible:shadow-[0_0_0_4px_color-mix(in_oklch,var(--primary)_12%,transparent)]"
+                  className="h-11 border-primary/15 bg-background/80 pl-9 pr-10 shadow-sm transition-all focus-visible:shadow-[0_0_0_4px_color-mix(in_oklch,var(--primary)_12%,transparent)]"
                   autoComplete="off"
                   inputMode="url"
                   spellCheck={false}
                   required
                   disabled={isConverting}
                 />
+                {input && !isConverting && (
+                  <button
+                    type="button"
+                    onClick={clearInput}
+                    className="absolute right-2 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="Limpar campo de URL"
+                    title="Limpar URL"
+                  >
+                    <RotateCcw className="size-4" />
+                  </button>
+                )}
               </div>
               <Button
                 type="submit"
@@ -158,7 +205,7 @@ export function AffiliateConverter() {
                       />
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      Link com redirecionamento
+                      Link com carregamento
                     </span>
                   </div>
                   <h2 className="mt-3 text-pretty font-semibold">

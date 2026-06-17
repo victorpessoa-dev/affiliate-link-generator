@@ -1,10 +1,25 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import type { Platform, ProductMetadata } from "@/lib/affiliate"
 
-const STORAGE_KEY = "affiliate-history"
-const MAX_HISTORY_ITEMS = 50
+type Platform = "shopee" | "mercadolivre"
+
+type ProductMetadata = {
+  title: string | null
+  description: string | null
+  image: string | null
+  price: string | null
+  currency: string | null
+}
+
+type StoredHistoryItem = Record<string, unknown> & {
+  id: string
+  platform: Platform
+  platformLabel: string
+  originalUrl: string
+  affiliateUrl: string
+  createdAt: number
+}
 
 export interface HistoryItem {
   id: string
@@ -17,6 +32,9 @@ export interface HistoryItem {
   product?: ProductMetadata | null
   createdAt: number
 }
+
+const STORAGE_KEY = "affiliate-history"
+const MAX_HISTORY_ITEMS = 50
 
 function isHttpUrl(value: unknown): value is string {
   if (typeof value !== "string") return false
@@ -33,7 +51,7 @@ function sanitizeHistory(value: unknown): HistoryItem[] {
   if (!Array.isArray(value)) return []
 
   return value
-    .filter((item): item is Record<string, unknown> => {
+    .filter((item): item is StoredHistoryItem => {
       if (!item || typeof item !== "object") return false
       const record = item as Record<string, unknown>
 
@@ -76,17 +94,17 @@ function sanitizeHistory(value: unknown): HistoryItem[] {
         : null
 
       return {
-        id: item.id as string,
-        platform: item.platform as Platform,
-        platformLabel: item.platformLabel as string,
-        originalUrl: item.originalUrl as string,
-        affiliateUrl: item.affiliateUrl as string,
+        id: item.id,
+        platform: item.platform,
+        platformLabel: item.platformLabel,
+        originalUrl: item.originalUrl,
+        affiliateUrl: item.affiliateUrl,
         redirectUrl: isHttpUrl(item.redirectUrl)
           ? item.redirectUrl
           : undefined,
         shortUrl: isHttpUrl(item.shortUrl) ? item.shortUrl : undefined,
         product,
-        createdAt: item.createdAt as number,
+        createdAt: item.createdAt,
       }
     })
     .slice(0, MAX_HISTORY_ITEMS)
@@ -115,7 +133,7 @@ export function useHistory() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
     } catch {
-      // Armazenamento indisponível.
+      // Armazenamento indisponivel.
     }
   }, [items, loaded])
 

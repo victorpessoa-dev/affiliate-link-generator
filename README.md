@@ -43,6 +43,42 @@ Em produção, configure também o endereço público da aplicação:
 APP_URL=https://seu-dominio.com
 ```
 
+### Validação de IDs de Afiliado
+
+Após configurar os IDs, valide se estão corretos:
+
+1. **Na interface web**: Acesse `http://localhost:3000/debug` para ver o painel de status
+   - Mostra o status de cada ID (configurado ou não)
+   - Exibe logs de conversão em tempo real
+   - Confirma que seu ID está sendo adicionado aos links
+
+2. **Via API**: Faça uma requisição para verificar o status:
+   ```bash
+   curl http://localhost:3000/api/status
+   ```
+   
+   Resposta esperada (status OK):
+   ```json
+   {
+     "status": "ok",
+     "summary": "✓ IDs de afiliado: ✓ ID Shopee configurado | ✓ ID Mercado Livre configurado",
+     "details": {
+       "shopee": {
+         "configured": true,
+         "id": "seu_id_da_shopee"
+       },
+       "mercadolivre": {
+         "configured": true,
+         "id": "seu_id_do_mercado_livre"
+       }
+     }
+   }
+   ```
+
+3. **Verificar logs**: Acesse `http://localhost:3000/api/debug/logs` para ver logs de conversão
+   - Cada conversão é registrada com o ID de afiliado sendo usado
+   - Você pode confirmar que o ID correto está sendo aplicado
+
 ### APIs opcionais
 
 Caso você possua endpoints próprios ou oficiais para criar links de afiliado,
@@ -102,6 +138,36 @@ npm run build
 - Configure as mesmas variáveis de ambiente na plataforma de hospedagem.
 - O histórico dos links fica salvo somente no `localStorage` do navegador.
 
+## Garantindo a Comissão
+
+Para garantir que você receberá comissão em cada venda através de um link gerado:
+
+1. **Confirme a configuração dos IDs**:
+   - Acesse a página de debug: `http://localhost:3000/debug`
+   - Ambos os IDs devem aparecer com status verde (✓ Configurado)
+
+2. **Valide que o ID está sendo adicionado**:
+   - Gere um link de teste
+   - Abra a página de debug e verifique os logs
+   - Procure por entradas "Link de afiliado gerado" com `hasAffiliateParams: true`
+   - O `extractedId` deve corresponder ao seu ID configurado
+
+3. **Teste os links**:
+   - Copie um link gerado
+   - Abra em uma nova aba privada/incógnito
+   - Visite a loja (Shopee ou Mercado Livre)
+   - Verifique se seus parâmetros estão na URL (ex: `?af_siteid=seu_id` para Shopee)
+
+4. **Monitorar conversões**:
+   - Cada conversão é registrada nos logs
+   - Você pode verificar em `http://localhost:3000/api/debug/logs`
+   - Os logs mostram se o ID foi detectado corretamente
+
+5. **Em produção**:
+   - Configure as mesmas variáveis de ambiente na plataforma de hospedagem
+   - Acesse `/debug` periodicamente para verificar se os links estão sendo gerados corretamente
+   - Configure alertas para erros de conversão (status da API retorna erro)
+
 ## Fluxo da conversão
 
 1. O navegador envia a URL para `/api/affiliate`.
@@ -110,22 +176,19 @@ npm run build
 4. A API configurada é utilizada, quando disponível.
 5. Se a API não estiver disponível, os parâmetros do ID de afiliado são
    adicionados diretamente à URL.
-6. O sistema cria um link assinado em `/g/...`, sem salvar o destino no
-   servidor.
-7. O link assinado exibe uma tela de transição e redireciona o visitante para a
-   URL de afiliado.
+6. O servidor valida se o link final contem o ID de afiliado configurado.
+7. A interface exibe e copia diretamente a URL de afiliado convertida.
 
 ## Links gerados
 
 O link principal exibido e copiado pelo gerador usa o formato:
 
 ```text
-https://seu-dominio.com/g/codigo-assinado
+https://www.exemplo.com/produto?parametros_do_afiliado=seu_id
 ```
 
-O destino fica dentro do token assinado e expira depois de 30 dias. O app não
-salva links em banco, KV, arquivo ou qualquer outro armazenamento no servidor.
-Somente o histórico local do navegador é salvo em `localStorage`.
+O app não salva links em banco, KV, arquivo ou qualquer outro armazenamento no
+servidor. Somente o histórico local do navegador é salvo em `localStorage`.
 
 ## Prévia do produto
 

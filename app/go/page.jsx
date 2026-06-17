@@ -6,26 +6,52 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 export const runtime = "nodejs"
 
-export async function generateMetadata({ searchParams }) {
-  const { t, token } = await searchParams
-  const rawToken = typeof t === "string" ? t : token
-  let payload = null
-  if (typeof rawToken === "string") {
-    try {
-      const decoded = decodeURIComponent(rawToken)
-      const url = new URL(decoded)
-      if (url.protocol === "http:" || url.protocol === "https:") {
-        payload = { url: url.toString(), expiresAt: Date.now() + 1000 * 60 }
-      }
-    } catch {
-      payload = null
+function readPayload(searchParams) {
+  const rawUrl = typeof searchParams.u === "string" ? searchParams.u : null
+  if (!rawUrl) return null
+
+  try {
+    const url = new URL(rawUrl)
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null
+
+    return {
+      url: url.toString(),
+      platformLabel:
+        typeof searchParams.p === "string" ? searchParams.p.slice(0, 80) : "Marketplace",
+      title: typeof searchParams.t === "string" ? searchParams.t.slice(0, 180) : null,
+      image: typeof searchParams.i === "string" ? searchParams.i : null,
     }
+  } catch {
+    return null
   }
+}
+
+function InvalidLink() {
+  return (
+    <main className="flex min-h-svh items-center justify-center px-4">
+      <div className="redirect-enter max-w-md rounded-2xl border bg-card p-8 text-center shadow-xl">
+        <h1 className="text-xl font-semibold">Link invalido</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Gere um novo link para continuar.
+        </p>
+        <Link
+          href="/"
+          className="mt-6 inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground"
+        >
+          Voltar ao gerador
+        </Link>
+      </div>
+    </main>
+  )
+}
+
+export async function generateMetadata({ searchParams }) {
+  const payload = readPayload(await searchParams)
 
   if (!payload) {
     return createOfferMetadata({
-      title: "Link inválido ou expirado",
-      description: "Este link não está mais disponível.",
+      title: "Link invalido",
+      description: "Gere um novo link para continuar.",
     })
   }
 
@@ -33,41 +59,9 @@ export async function generateMetadata({ searchParams }) {
 }
 
 export default async function RedirectPage({ searchParams }) {
-  const { t, token } = await searchParams
-  const rawToken = typeof t === "string" ? t : token
-  let payload = null
-  if (typeof rawToken === "string") {
-    try {
-      const decoded = decodeURIComponent(rawToken)
-      const url = new URL(decoded)
-      if (url.protocol === "http:" || url.protocol === "https:") {
-        payload = { url: url.toString(), expiresAt: Date.now() + 1000 * 60 }
-      }
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error("decode token error", { rawToken, error: err })
-      payload = null
-    }
-  }
+  const payload = readPayload(await searchParams)
 
-  if (!payload) {
-    return (
-      <main className="flex min-h-svh items-center justify-center px-4">
-        <div className="redirect-enter max-w-md rounded-2xl border bg-card p-8 text-center shadow-xl">
-          <h1 className="text-xl font-semibold">Link inválido ou expirado</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Gere um novo link para continuar.
-          </p>
-          <Link
-            href="/"
-            className="mt-6 inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground"
-          >
-            Voltar ao gerador
-          </Link>
-        </div>
-      </main>
-    )
-  }
+  if (!payload) return <InvalidLink />
 
   return <RedirectScreen payload={payload} />
 }
