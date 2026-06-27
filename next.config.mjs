@@ -1,6 +1,6 @@
 ﻿/** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['playwright'],
+  serverExternalPackages: ['playwright-core', '@sparticuz/chromium'],
   turbopack: {
     root: process.cwd(),
   },
@@ -14,4 +14,5 @@ const nextConfig = {
 }
 
 export default nextConfig
+
 
