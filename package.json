@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "dev:turbo": "next dev --turbopack",
+    "postinstall": "node scripts/install-playwright.mjs",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",

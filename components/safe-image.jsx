@@ -8,10 +8,12 @@ export function SafeImage({
   alt = "",
   className,
   fallbackClassName = "",
+  fallbackSrc = "",
 }) {
   const [failedSrc, setFailedSrc] = useState(null)
+  const imageSrc = src && failedSrc !== src ? src : fallbackSrc && failedSrc !== fallbackSrc ? fallbackSrc : ""
 
-  if (!src || failedSrc === src) {
+  if (!imageSrc) {
     return (
       <div
         className={`flex h-full w-full items-center justify-center bg-muted ${fallbackClassName}`}
@@ -23,11 +25,13 @@ export function SafeImage({
 
   return (
     <img
-      src={src}
+      src={imageSrc}
       alt={alt}
       className={className}
+      loading="lazy"
+      decoding="async"
       referrerPolicy="no-referrer"
-      onError={() => setFailedSrc(src)}
+      onError={() => setFailedSrc(imageSrc)}
     />
   )
 }

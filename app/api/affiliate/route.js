@@ -74,7 +74,6 @@ export async function POST(request) {
             platform: result.platform,
             method: result.method,
             hasAffiliate: !!result.affiliateUrl,
-            redirectUrl: loadingUrl,
         });
         return json({
             ...result,
