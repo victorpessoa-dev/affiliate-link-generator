@@ -1,5 +1,6 @@
-/** @type {import('next').NextConfig} */
+﻿/** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['playwright'],
   turbopack: {
     root: process.cwd(),
   },
@@ -13,3 +14,4 @@ const nextConfig = {
 }
 
 export default nextConfig
+
