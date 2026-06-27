@@ -13,8 +13,8 @@ const PLATFORM_LOGOS = {
   mercadolivre: {
     src: "/brands/mercadolivre.png",
     alt: "Mercado Livre",
-    frameClass: "bg-[#ffe600]",
-    imageClass: "p-1",
+    frameClass: "bg-white shadow-sm",
+    imageClass: "p-0.5",
   },
 }
 

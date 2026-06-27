@@ -55,6 +55,26 @@ function marketplaceBadgeClass(marketplace) {
   return "bg-background text-foreground ring-border"
 }
 
+function hashText(value) {
+  return String(value || "").split("").reduce((hash, char) => {
+    return (hash * 31 + char.charCodeAt(0)) % 100000
+  }, 17)
+}
+
+function productFallbackImage(title) {
+  const words = String(title || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s-]/g, " ")
+    .split(/\s+/)
+    .map((word) => word.toLowerCase())
+    .filter((word) => word.length > 2)
+    .slice(0, 6)
+
+  const tags = (words.length ? words : ["produto"]).map(encodeURIComponent).join(",")
+  return `https://loremflickr.com/640/480/${tags}?lock=${hashText(title)}`
+}
+
 export function OfferSearch() {
   const [query, setQuery] = useState("")
   const [filters, setFilters] = useState(initialFilters)
@@ -472,6 +492,7 @@ export function OfferSearch() {
                       alt={product.titulo}
                       className="h-full min-h-40 w-full object-cover"
                       fallbackClassName="min-h-40"
+                      fallbackSrc={productFallbackImage(product.titulo)}
                     />
                   </div>
                   <div className="flex min-w-0 flex-col gap-4 p-3">
